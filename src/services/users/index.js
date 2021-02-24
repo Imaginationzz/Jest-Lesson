@@ -1,6 +1,8 @@
 const router = require("express").Router()
 const UserSchema = require("./schema")
 const UserModel = require("mongoose").model("User", UserSchema)
+const { authenticate } = require("../auth");
+const { authorize } = require("../auth/middleware");
 
 router.post("/register", async (req, res) => {
     try {
@@ -27,9 +29,9 @@ router.post("/login", async (req, res) => {
 
         const user = await UserModel.findOne({ username })
 
-        user.password === password
-            ? res.status(200).send({ token: "VALID_TOKEN" })
-            : res.status(400).send({ message: "No username/password match" })
+        const accessToken = await authenticate(user);
+        console.log(accessToken);
+    res.send({ accessToken });
 
     } catch (error) {
         res.status(400).send({
@@ -38,6 +40,15 @@ router.post("/login", async (req, res) => {
         })
     }
 })
+router.get("/cats", authorize, async (req, res, next) => {
+    try {
+      
+      const url = response.body.url
+      res.send(users)
+    } catch (error) {
+      next(error)
+    }
+  })
 
 
 module.exports = router

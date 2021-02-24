@@ -1,6 +1,7 @@
 const server = require("../src/server")
 const request = require("supertest")(server)
 const mongoose = require("mongoose")
+const { authenticate,verifyJWT } = require("../services/auth");
 
 const UserSchema = require("../src/services/users/schema")
 const UserModel = require("mongoose").model("User", UserSchema)
@@ -41,17 +42,17 @@ describe("Stage I: Testing tests", () => {
 
 describe("Stage II: testing user creation and login", () => {
     const validCredentials = {
-        username: "luisanton.io",
-        password: "password"
+        username: "test",
+        password: "test"
     }
 
     const invalidCredentials = {
-        username: "luisanton.io"
+        username: "test"
     }
 
     const incorrectCredentials = {
-        username: "luisanton.io",
-        password: "incorrectPassword"
+        username: "test1",
+        password: "test1"
     }
 
     const validToken = "VALID_TOKEN"
@@ -81,14 +82,36 @@ describe("Stage II: testing user creation and login", () => {
     it("should return a valid token when loggin in with correct credentials", async () => { // "VALID_TOKEN"
         const response = await request.post("/users/login").send(validCredentials) // 
 
-        const { token } = response.body
-        expect(token).toBe(validToken)
+        
+        const token = req.header("Authorization").replace("Bearer ", "")
+        const decoded= await verifyJWT(token)
+        const user = await UserModel.findOne({_id: decoded._id})
+            
+          
+        expect(user._id).toBe(decoded._id)
+    })
+    it("should be a valid endpoint", async () => {
+        const response = await request.get("/users/cats").send(validCredentials)
+
+        expect(response.status).toBe(200)
+
+        const { url } = response.body
+        expect(url).toBeDefined()
+        expect(typeof url).toBeString()
     })
 
-    it("should NOT return a valid token when loggin in with INCORRECT credentials", async () => {
+    it("should NOT return a valid token when loggin in with invalid credentials", async () => {
         const response = await request.post("/users/login").send(invalidCredentials)
 
         expect(response.status).toBe(400)
+
+        const { token } = response.body
+        expect(token).not.toBeDefined()
+    })
+    it("should NOT return a valid token when loggin in with INCORRECT credentials", async () => {
+        const response = await request.post("/users/login").send(incorrectCredentials)
+
+        expect(response.status).toBe(401)
 
         const { token } = response.body
         expect(token).not.toBeDefined()
