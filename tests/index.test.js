@@ -88,7 +88,7 @@ describe("Stage II: testing user creation and login", () => {
         const user = await UserModel.findOne({_id: decoded._id})
             
           
-        expect(user._id).toBe(decoded._id)
+        expect(user.username).toBe(validCredentials.username)
     })
     it("should be a valid endpoint", async () => {
         const response = await request.get("/users/cats").send(validCredentials)
@@ -97,7 +97,7 @@ describe("Stage II: testing user creation and login", () => {
 
         const { url } = response.body
         expect(url).toBeDefined()
-        expect(typeof url).toBeString()
+        expect(typeof url).toBe("string")
     })
 
     it("should NOT return a valid token when loggin in with invalid credentials", async () => {
