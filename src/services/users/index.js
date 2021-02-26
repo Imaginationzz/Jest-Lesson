@@ -44,7 +44,7 @@ router.get("/cats", authorize, async (req, res, next) => {
     try {
       
       const url = response.body.url
-      res.send(users)
+      res.send(url)
     } catch (error) {
       next(error)
     }
